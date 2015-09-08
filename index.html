@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.0/css/materialize.min.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+    <style>
+
+    h1
+    {
+        font-size: 3.5rem;
+        text-align: center;
+
+    }
+
+    header
+    {
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 1rem !important;
+    }
+
+    p
+    {
+        text-align: center;
+        font-size: 1.2rem;
+    }
+
+    #panelResultado
+    {
+        text-align: center;
+        color: white;
+    }
+
+    label
+    {
+        font-size: 0.9rem !important;
+    }
+    </style>
+
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <header class="row">
+                <h1 class="col s12">
+                    ¿Puedo llevar esta moto con el A2?
+                </h1>
+                <h6 class="col s12 center-align">
+                    Creado por <a href="http://josetomastocino.com">JoséTomásTocino</a>
+                </h6>
+            </header>
+
+            <p class=" flow-textt col s12">
+
+                La ley es clara: <em>El permiso de conducción de la clase A2
+                autoriza para conducir motocicletas con una <strong>potencia
+                máxima de     35 kW</strong> y una <strong>relación
+                potencia/peso máxima de 0,2 kW/kg</strong> y <strong>no
+                derivadas de un vehículo con más del doble de su
+                potencia</strong></em>.
+
+            </p>
+
+            <p class="flow-textt col s12">
+                Aún así, hay gente que no tiene claro qué motos se pueden llevar con el A2, cuáles no,
+                ni cuáles se pueden limitar. <br><strong>Hasta hoy</strong>. Rellena el formulario
+                y entérate de una vez.
+            </p>
+        </div>
+
+        <div class="row">
+            <div class="col s12 m12 l4">
+                <label for="">Unidades:</label>
+                <div class="switch">
+                    <label>
+                    Kilovatios (kW)
+                    <input type="checkbox" id="chkUnidad">
+                    <span class="lever"></span>
+                    Caballos (cv)
+                    </label>
+                </div>
+            </div>
+            <div class="input-field col s12 m12 l4">
+                <input id="txtPotenciaOriginal" placeholder="" type="number" step="0.01" class="validatesss">
+                <label for="txtPotenciaOriginal">Potencia original:</label>
+            </div>
+            <div class="input-field col s12 m12 l4">
+                <input id="txtPotenciaLimitada" placeholder="" type="number" step="0.01" class="validate">
+                <label for="txtPotenciaLimitada">Potencia limitada (en blanco si no está limitada)</label>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col s12">
+                <div class="card-panel" id="panelResultado">
+                    <h2></h2>
+                    <p></p>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col s4 offset-s4  m2 offset-m5 center-align">
+                <a href="http://cadizenmoto.com">
+                    <img class="responsive-img" src="http://cadizenmoto.com/assets/images/logo1.png">
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.0/js/materialize.min.js"></script>
+
+    <script>
+        var actualizarResultado = function()
+        {
+            var potenciaOriginal = parseFloat($("#txtPotenciaOriginal").val()),
+                potenciaLimitada = parseFloat($("#txtPotenciaLimitada").val()),
+                unidad = $("#chkUnidad")[0].checked ? "cv" : "kW",
+                potenciaMaxima = $("#chkUnidad")[0].checked ? 95.2 : 70,
+                potenciaMaximaLimitada = potenciaMaxima / 2;
+
+            var puedeConducirse = true, razonRechazo;
+            var estiloPositivo = "light-green darken-1",
+                estiloNegativo = "red darken-3";
+
+            var $panelResultado = $("#panelResultado"),
+                $panelResultadoHeader = $panelResultado.find("h2"),
+                $panelResultadoRazon = $panelResultado.find("p");
+
+            // Si ha metido una potencia original incorrecta
+            if (isNaN(potenciaOriginal))
+            {
+                $panelResultado.removeClass(estiloPositivo).removeClass(estiloNegativo);
+                $panelResultadoHeader.html("");
+                $panelResultadoRazon.html("");
+
+                return;
+            }
+
+            // Si la potencia original supera la potencia máxima, NADA
+            if (potenciaOriginal > potenciaMaxima)
+            {
+                puedeConducirse = false;
+                razonRechazo = "La potencia original de la moto (" + potenciaOriginal +
+                    unidad + ") supera la potencia máxima limitable (" + potenciaMaxima + unidad + ")";
+            }
+
+            // Si no tiene limitación pero la original supera 35kW, NADA
+            else if (isNaN(potenciaLimitada) && potenciaOriginal > potenciaMaximaLimitada)
+            {
+                puedeConducirse = false;
+                razonRechazo = "Sin limitar, la potencia original de la moto (" + potenciaOriginal +
+                    unidad + ") supera la potencia máxima (" + (potenciaMaximaLimitada) + unidad + ") permitida para el A2. ";
+
+                razonRechazo += "<br>Afortunadamente, puedes limitar la moto al no superar el máximo limitable ("
+                    + potenciaMaxima + unidad + ").";
+            }
+
+            // Con limitación
+            else if (!isNaN(potenciaLimitada))
+            {
+                // Si está limitada por debajo de la mitad de la potencia original, NADA
+                if (2 * potenciaLimitada < potenciaOriginal)
+                {
+                    puedeConducirse = false;
+                    razonRechazo = "La potencia original (" + potenciaOriginal +
+                        unidad + ")  supera el doble de la potencia limitada ( 2 &times; " +
+                        potenciaLimitada + unidad + " = " + (2 * potenciaLimitada) + unidad + ")";
+                }
+
+                // Si está por encima de la potencia máxima absoluta, NADA
+                else if (potenciaLimitada > potenciaMaximaLimitada)
+                {
+                    puedeConducirse = false;
+                    razonRechazo = "La potencia limitada (" + potenciaLimitada +
+                        unidad + ")  supera la potencia máxima permitida (" + (potenciaMaximaLimitada) + unidad + ")";
+                }
+
+                else if (potenciaLimitada > potenciaOriginal)
+                {
+                    puedeConducirse = false;
+                    razonRechazo = "WTF?";
+                }
+            }
+
+            // Actualizar panel
+            if (puedeConducirse)
+            {
+                $panelResultado.removeClass(estiloNegativo).addClass(estiloPositivo);
+                $panelResultadoHeader.html("Sí puedes :)");
+
+                // Sin limitación
+                if (isNaN(potenciaLimitada))
+                {
+                    $panelResultadoRazon.html("La potencia original (" + potenciaOriginal +
+                        unidad + ") no supera la máxima (" + (potenciaMaximaLimitada) + unidad + ").");
+                }
+
+                // Con limitación
+                else
+                {
+                    $panelResultadoRazon.html("La potencia limitada (" + potenciaLimitada +
+                        unidad + ") no supera la máxima (" + (potenciaMaximaLimitada) + unidad + ") y la limitación es correcta.");
+                }
+            }
+
+            else
+            {
+                $panelResultado.removeClass(estiloPositivo).addClass(estiloNegativo);
+                $panelResultadoHeader.html("No puedes :(");
+                $panelResultadoRazon.html(razonRechazo);
+            }
+
+        };
+
+        $("#txtPotenciaOriginal, #txtPotenciaLimitada").on("keyup", actualizarResultado);
+        $("#chkUnidad").on("change", actualizarResultado);
+
+    </script>
+
+</body>
+</html>
